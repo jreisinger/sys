@@ -1,0 +1,29 @@
+#!/usr/bin/env perl
+# Take a pattern and search through your PATH looking for any program name that
+# matches that pattern. Print all matching paths.
+use strict;
+use warnings;
+use 5.010;
+use Config;
+use File::Spec;
+
+die "Usage: $0 '<pattern>'\n" unless @ARGV == 1;
+
+my $patttern = qr/$ARGV[0]/;
+my $separator = $Config{path_sep};  # PATH separator
+my $path = $ENV{PATH};              # your PATH
+
+my @paths = split /$separator/, $path;
+
+for my $path (@paths) {
+	for my $file ( get_files($path) ) {
+		say File::Spec->catfile( $path, $file ) if $file =~ /$patttern/;
+	}
+}
+
+sub get_files {
+	my $path = shift;
+
+	chdir $path;
+	return glob "*";
+}
