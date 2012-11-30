@@ -1,4 +1,4 @@
-#!/usr/bin/evn perl
+#!/usr/bin/env perl
 # Monitor some server stuff and send mail if something looks not ok.
 # Should be run from cron.
 use strict;
