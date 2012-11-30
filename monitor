@@ -1,0 +1,113 @@
+#!/usr/bin/evn perl
+# Monitor some server stuff and send mail if something looks not ok.
+# Should be run from cron.
+use strict;
+use warnings;
+use List::MoreUtils qw/ uniq /;
+use Sys::Hostname;
+use Email::MIME;
+use 5.010;
+
+sub disk_free {
+    my $threshold = 80;    # % of disk space
+
+    for (`df -h`) {
+        next unless /^\//;
+        my ( $fs, $use, $mount_point ) = (split)[ 0, 4, 5 ];
+        ( my $use_numeric = $use ) =~ s/%$//;
+        if ( $use_numeric >= $threshold ) {
+            return "not ok, $mount_point ($fs) is $use full\n";
+        }
+    }
+
+}
+
+sub who {
+    my @logged_on;
+
+    for (`who`) {
+        my $who = (split)[0];
+        push @logged_on, $who;
+    }
+
+    @logged_on = uniq @logged_on;
+    if (@logged_on) {
+        my $string = "not ok, logged on: " . join( " ", @logged_on ) . "\n";
+        return $string;
+    }
+}
+
+sub last_from {
+    my %logged_in_from;
+
+    for (`last`) {
+        last if /^\s+$/;
+        my ( $who, $from ) = (split)[ 0, 2 ];
+        push @{ $logged_in_from{$who} }, $from;
+    }
+
+    for my $who ( keys %logged_in_from ) {
+        @{ $logged_in_from{$who} } = uniq @{ $logged_in_from{$who} };
+        if ( @{ $logged_in_from{$who} } > 1 ) {
+            my $string = "not ok, $who logged in from: "
+              . join( " ", @{ $logged_in_from{$who} } ) . "\n";
+            return $string;
+        }
+    }
+}
+
+sub send_mail {
+    my $from    = shift;
+    my $to      = shift;
+    my $subject = shift;
+    my $body    = shift;
+
+    # first, create your message
+    my $message = Email::MIME->create(
+        header_str => [
+            From    => $from,
+            To      => $to,
+            Subject => $subject,
+        ],
+        attributes => {
+            encoding => 'quoted-printable',
+            charset  => 'ISO-8859-1',
+        },
+        body_str => $body,
+    );
+
+    # send your message
+    use Email::Sender::Simple qw(sendmail);
+    sendmail($message);
+}
+
+# Main
+die "Usage: $0 <email_address> | debug\n" unless @ARGV == 1;
+my $mail_to = shift;
+my $debug = 1 if $mail_to eq 'debug';
+
+my $subject = $0;
+my $host    = hostname;
+my $login   = getlogin || getpwuid($<) || "uknown";
+my $from    = "$login\@$host";
+
+my @checks = qw( disk_free who last_from );
+my $not_ok;
+my $mail_body;
+for my $check (@checks) {
+    no strict 'refs';    # ugly huh?
+    my $rv = &$check;
+    if ($rv) {           # we got trouble
+        $not_ok++;
+        $mail_body .= "Check '$check' " . $rv;
+    }
+}
+
+if ( $debug ) {
+    say "From: $from";
+    say "To: <email_address>";
+    say "Subject: $subject";
+    say $mail_body;
+} else {
+    send_mail( $from, $mail_to, $subject, $mail_body ) if $not_ok;
+}
