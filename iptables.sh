@@ -1,13 +1,9 @@
 #!/bin/bash
 # A simple iptables firewall script.
 # Usage:
-#    Run this script: bash iptables.sh
-#    Check rules are ok: iptables -L -n
-#    Store them: iptables-save > /etc/iptables.conf
-#    Create /etc/network/if-up.d/iptables
-#        #!/bin/sh
-#        iptables-restore < /etc/iptables.conf
-#    Set mode: chmod +x /etc/network/if-up.d/iptables
+#    Store this script as /etc/network/if-up.d/iptables
+#    Set mode: chmod 755 /etc/network/if-up.d/iptables
+#
 # Usage 2:
 #    Place a call to this script in your local startup script
 #        /etc/rc.local - Debian, Ubuntu
