@@ -102,7 +102,7 @@ die "Usage: $0 <email_address> | debug\n" unless @ARGV == 1;
 my $mail_to = shift;
 my $debug = 1 if $mail_to eq 'debug';
 
-my $subject = $0;
+my $subject = "monitor";
 my $host    = hostname;
 my $login   = getlogin || getpwuid($<) || "uknown";
 my $from    = "$login\@$host";
