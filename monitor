@@ -1,6 +1,7 @@
 #!/usr/bin/env perl
 # Monitor some server stuff and send mail if something looks not ok.
 # Should be run from cron.
+# Run with "debug" argument to get output on STDOUT.
 use strict;
 use warnings;
 use List::MoreUtils qw/ uniq /;
@@ -8,7 +9,9 @@ use Sys::Hostname;
 use Email::MIME;
 use 5.010;
 
+###################
 sub disk_free {
+###################
     my $threshold = 80;    # % of disk space
 
     for (`df -h`) {
@@ -19,25 +22,14 @@ sub disk_free {
             return "not ok, $mount_point ($fs) is $use full\n";
         }
     }
-
+    return 0;
 }
 
-sub who {
-    my @logged_on;
-
-    for (`who`) {
-        my $who = (split)[0];
-        push @logged_on, $who;
-    }
-
-    @logged_on = uniq @logged_on;
-    if (@logged_on) {
-        my $string = "not ok, logged on: " . join( " ", @logged_on ) . "\n";
-        return $string;
-    }
-}
-
+###################
 sub last_from {
+###################
+    # Did someone logged in from two or more different places?
+    # (may be easily a false negative)
     my %logged_in_from;
 
     for (`last`) {
@@ -49,14 +41,36 @@ sub last_from {
     for my $who ( keys %logged_in_from ) {
         @{ $logged_in_from{$who} } = uniq @{ $logged_in_from{$who} };
         if ( @{ $logged_in_from{$who} } > 1 ) {
-            my $string = "not ok, $who logged in from: "
+            my $string = "not ok, '$who' logged in from: "
               . join( " ", @{ $logged_in_from{$who} } ) . "\n";
             return $string;
         }
     }
+    return 0;
 }
 
+###################
+sub is_up {
+###################
+    my @hosts =
+      qw( host1 host2 );
+    my @down;
+    use Net::Ping;
+    for my $host (@hosts) {
+        my $p = Net::Ping->new();
+        push @down, $host unless $p->ping($host);
+        $p->close();
+    }
+    if (@down) {
+        return "not ok, downed hosts: @down\n";
+    } else {
+        return 0;
+    }
+}
+
+###################
 sub send_mail {
+###################
     my $from    = shift;
     my $to      = shift;
     my $subject = shift;
@@ -81,7 +95,9 @@ sub send_mail {
     sendmail($message);
 }
 
+###################
 # Main
+###################
 die "Usage: $0 <email_address> | debug\n" unless @ARGV == 1;
 my $mail_to = shift;
 my $debug = 1 if $mail_to eq 'debug';
@@ -91,7 +107,7 @@ my $host    = hostname;
 my $login   = getlogin || getpwuid($<) || "uknown";
 my $from    = "$login\@$host";
 
-my @checks = qw( disk_free who last_from );
+my @checks = qw( disk_free is_up );
 my $not_ok;
 my $mail_body;
 for my $check (@checks) {
@@ -103,11 +119,15 @@ for my $check (@checks) {
     }
 }
 
-if ( $debug ) {
+if ($debug) {
     say "From: $from";
     say "To: <email_address>";
     say "Subject: $subject";
-    say $mail_body;
+    if ( $mail_body ) {
+        say $mail_body;
+    } else {
+        say "Everything OK (this is displayed only in debug mode)";
+    }
 } else {
     send_mail( $from, $mail_to, $subject, $mail_body ) if $not_ok;
 }
