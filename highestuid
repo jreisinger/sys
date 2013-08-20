@@ -1,0 +1,19 @@
+#!/usr/bin/perl
+# Print the next highest UID.
+# Taken from "The Otter Book" by David N. Blank-Edelman and modified.
+use strict;
+use warnings;
+
+my $Debug      = $ENV{DEBUG};
+my $highestuid = 0;
+
+# getpwent() automatically ties to any OS-level name service being used (like
+# NIS, LDAP, Kerberbos, NIS+)
+while ( my @fields = getpwent ) {
+    my $uid = $fields[2];
+    next if $uid == 65534;                # skip nobody
+    print "Comparing $uid\n" if $Debug;
+    $highestuid = ( $uid > $highestuid ) ? $uid : $highestuid;
+}
+
+print 'The next available UID is ' . ++$highestuid . "\n";
