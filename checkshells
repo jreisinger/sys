@@ -1,0 +1,23 @@
+#!/usr/bin/perl
+# Report invalid login shells, i.e. those not listed in /etc/shells
+# Taken from "The Otter Book" by David N. Blank-Edelman and modified.
+use strict;
+use warnings;
+use User::pwent;
+
+my $shells = '/etc/shells';
+my %valid_shells;
+open my $SHELLS, '<', $shells or die "$!";
+while (<$SHELLS>) {
+    next if /^\s*#/;
+    chomp;
+    $valid_shells{$_} = 1;
+}
+close $SHELLS;
+
+while ( my $pwent = getpwent ) {
+    my $shell = $pwent->shell;
+    print $pwent->name . ' has invalid shell (' . $pwent->shell . ")\n"
+      unless exists $valid_shells{ $pwent->shell };
+}
+endpwent();
