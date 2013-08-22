@@ -1,0 +1,40 @@
+#!/usr/bin/perl
+# Make sure home dirs are owner by the right user and have the right
+# permissions.
+# Taken from "The Otter Book" by David N. Blank-Edelman and modified.
+use strict;
+use warnings;
+
+# these modules override the standard getpwent() and stat() and return objects
+use File::stat;
+use User::pwent;
+
+# note: this will beat heavily upon any machines using automounted homedirs
+while ( my $entry = getpwent ) {
+
+    # make sure we stat the actual dir, even through layers of symlink
+    # indirection
+    my $homedir = $entry->dir . '/.';
+
+    # skip system accounts
+    next unless $homedir =~ /\/home\//;
+
+    my $st = stat $homedir;
+    unless ($st) {
+        warn "$homedir -- $!\n";
+        next;
+    }
+    print "$homedir -- owned by "
+      . $st->uid
+      . " (should be be "
+      . $entry->uid
+      . " instead!).\n"
+      unless $st->uid == $entry->uid;
+
+    warn $entry->name . "'s homedir is world-writable!\n"
+
+      # world writable is fine if dir is set "sticky" (i.e., 01000)
+      #if ( $st->mode & 022 and ( !$st->mode & 01000 ) ); # FIXME - man chmod
+      if ( $st->mode & 022 );
+}
+endpwent();
