@@ -1,6 +1,5 @@
 #!/usr/bin/perl
 # Report invalid login shells, i.e. those not listed in /etc/shells
-# Taken from "The Otter Book" by David N. Blank-Edelman and modified.
 use strict;
 use warnings;
 use User::pwent;

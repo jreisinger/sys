@@ -1,6 +1,5 @@
 #!/usr/bin/env perl
 # Search candidates for removal to free some disk space.
-# Taken from "The Otter Book" by David N. Blank-Edelman and modified.
 use strict;
 use warnings;
 

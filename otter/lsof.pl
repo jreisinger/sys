@@ -1,6 +1,5 @@
 #!/usr/bin/perl -w
 # Show all open files and PIDs using them.
-# Taken from "The Otter Book" by David N. Blank-Edelman.
 use strict;
 use Text::Wrap;
 

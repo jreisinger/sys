@@ -1,10 +1,8 @@
 #!/usr/bin/perl
 # Make sure home dirs are owner by the right user and have the right
 # permissions.
-# Taken from "The Otter Book" by David N. Blank-Edelman and modified.
 use strict;
 use warnings;
-
 # these modules override the standard getpwent() and stat() and return objects
 use File::stat;
 use User::pwent;

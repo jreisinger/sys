@@ -1,6 +1,5 @@
 #!/usr/bin/perl
 # Print the next highest UID.
-# Taken from "The Otter Book" by David N. Blank-Edelman and modified.
 use strict;
 use warnings;
 
