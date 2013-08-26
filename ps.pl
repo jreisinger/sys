@@ -1,8 +1,7 @@
-#!/usr/bin/env perl
+#!/usr/bin/env perl -w
 # List running processes by manually inspecting /proc.
 # Shoud be run as root/sudo.
 use strict;
-use warnings;
 
 opendir my $PROC, '/proc' or die "$!";
 while ( readdir $PROC ) {
