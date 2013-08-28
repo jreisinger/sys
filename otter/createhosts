@@ -13,6 +13,27 @@ use strict;
     while (<DATA>) {
         chomp;    # remove the record separator!
         my %record = split /:\s*|\n/;
+
+        # check for bad hostnames
+        if ( $record{name} =~ /[^-.a-zA-Z0-9]/ ) {
+            warn "!!! $record{name} contains illegal characters, "
+              . "skipping...\n";
+            next;
+        }
+
+        # check for bad aliases
+        if ( $record{aliases} =~ /[^-.a-zA-Z0-9\s]/ ) {
+            warn "!!! $record{aliases} contain illegal characters, "
+              . "skipping...\n";
+            next;
+        }
+
+        # check for missing address
+        unless ( defined $record{address} ) {
+            warn "!!! $record{address} not defined, " . "skipping...\n";
+            next;
+        }
+
         print "$record{address}\t$record{name} $record{aliases}\n";
     }
 
