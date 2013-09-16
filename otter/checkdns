@@ -4,34 +4,24 @@ use strict;
 use warnings;
 use Data::Dumper;
 
+use lib $ENV{HOME} . '/perl5lib';
+use MyUtils qw(nsLookup);
+
 my $host = shift;
 die "Usage: $0 hostname\n" unless $host;
 
-my @servers     = qw( 8.8.8.8 ns1.linode.com ns2.linode.com );
-my $nslookupexe = '/usr/bin/nslookup';
+my @servers = qw( 8.8.8.8 ns1.linode.com ns2.linode.com );
 
 my %answers;
-for my $srv (@servers) {
+for my $srv (@servers)
+{
     $answers{$srv} = nsLookup( $srv, $host );
 }
 
 my %inv = reverse %answers;
 
-if ( keys %inv > 1 ) {
+if ( keys %inv > 1 )
+{
     warn "We got some inconsistency\n";
     print Dumper \%answers;
-}
-
-sub nsLookup {
-    my ( $srv, $host ) = @_;
-
-    open my $NSLOOKUP, '-|', "$nslookupexe $host $srv" or die "$!";
-    while (<$NSLOOKUP>) {
-        next unless /^Address/;
-        next if /#/;    # skip DNS server address
-        s/^Address[^\d]+//;
-        chomp;
-        return $_;
-    }
-    close $NSLOOKUP;
 }
