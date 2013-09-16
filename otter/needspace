@@ -6,6 +6,9 @@ use warnings;
 use File::Find;
 use File::Basename;
 
+use lib $ENV{HOME} . '/perl5lib';
+use MyUtils qw(bytesToMeg);
+
 my %derivations = (
     '.dvi' => '.tex',
     '.aux' => '.tex',
@@ -85,10 +88,6 @@ sub ReportDerivFiles {
         ( my $prettypath = $path ) =~ s|\./|~/|;    # make path prettier
         print "$prettypath ($targets->{$kind}{$path} bytes)\n";
     }
-    print 'These files take up ' . BytesToMeg($tempsize) . "MB total.\n\n";
+    print 'These files take up ' . bytesToMeg($tempsize) . "MB total.\n\n";
 }
 
-sub BytesToMeg {                                    # convert bytes to X.XXMB
-    my $size = shift;
-    return sprintf "%.2f", $size / ( 1024 * 1024 );
-}
