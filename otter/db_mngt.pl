@@ -27,3 +27,11 @@ foreach my $row (@$all) {
 $dbh->disconnect;
 
 unlink $dbfile;
+
+__END__
+
+More info
+
+* https://metacpan.org/module/DBI
+* https://metacpan.org/module/DBD::SQLite
+* http://www.sqlite.org
