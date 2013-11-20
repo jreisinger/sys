@@ -6,12 +6,11 @@ use warnings;
 use Socket;
 use Time::Local;
 
-#use Regexp::Debugger;
-
 die "Usage: $0 /var/log/conntrackd-stats.log" unless defined $ARGV[0];
 
-my $max_ports = 999;      # number of ports an IP has connected to
-my $max_conns = 10000;    # number of connections to a port
+my $max_ports      = 999;      # number of ports an IP has connected to
+my $max_conns      = 10000;    # number of connections to a port
+my $max_smtp_conns = 1200;     # number of connections to port 25
 my %conn;
 my $earliest = time;
 my $latest   = 0;
@@ -66,15 +65,20 @@ while (<>) {
 
 }
 
+###################
+# Report printing #
+###################
+
 # Print general header
-my $days = sprintf "%.2f", ( $latest - $earliest ) / 3600 / 24;
+my $seconds = $latest - $earliest;
+my $days = sprintf "%.2f", ($seconds) / 3600 / 24;
 print 'Logs timespan: '
   . localtime($earliest) . ' -- '
   . localtime($latest)
   . " ($days days)\n";
 print "Matched $lines_n{matched} out of $lines_n{total} lines\n";
 
-# Print IPs connecting to too many different ports
+print "### Connecting to too many different ports ###\n";
 for my $ip (
     sort { scalar( keys %{ $conn{$b} } ) <=> scalar( keys %{ $conn{$a} } ) }
     keys %conn
@@ -87,13 +91,25 @@ for my $ip (
     }
 }
 
-# Print IPs connecting too many times to a single port (ex. sending spam, port 25)
 # Thanks to http://www.perlmonks.org/?node_id=1063511
-printf "%-15s connected to TCP port %5d %9d times\n", @$_
+print "### Connecting too many times to a single port ###\n";
+printf "%-15s connected to TCP port %5d %9d times (%d times per minute)\n", @$_
   for sort { $b->[2] <=> $a->[2] }
   grep     { $_->[2] > $max_conns }
   map {
     my $ip = $_;
-    map { [ $ip, $_, $conn{$ip}{$_} ] } keys %{ $conn{$ip} }
+    map { [ $ip, $_, $conn{$ip}{$_}, ( $conn{$ip}{$_} / $seconds * 60 ) ] }
+      keys %{ $conn{$ip} }
+  }
+  keys %conn;
+
+print "### Possible spam sending ###\n";
+printf "%-15s connected to TCP port %5d %9d times (%d times per minute)\n", @$_
+  for sort { $b->[2] <=> $a->[2] }
+  grep { $_->[1] == 25 and $_->[2] > $max_smtp_conns }
+  map {
+    my $ip = $_;
+    map { [ $ip, $_, $conn{$ip}{$_}, ( $conn{$ip}{$_} / $seconds * 60 ) ] }
+      keys %{ $conn{$ip} }
   }
   keys %conn;
