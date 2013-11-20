@@ -10,7 +10,7 @@ use Time::Local;
 
 die "Usage: $0 /var/log/conntrackd-stats.log" unless defined $ARGV[0];
 
-my $max_ports = 100;      # number of ports an IP has connected to
+my $max_ports = 999;      # number of ports an IP has connected to
 my $max_conns = 10000;    # number of connections to a port
 my %conn;
 my $earliest = time;
