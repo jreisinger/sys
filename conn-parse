@@ -88,12 +88,12 @@ for my $ip (
 }
 
 # Print IPs connecting too many times to a single port (ex. sending spam, port 25)
-# (FIXME: should be sorted -- see Perl Cookbook 4.16)
-for my $ip ( keys %conn ) {
-    for my $port ( keys $conn{$ip} ) {
-        if ( $conn{$ip}{$port} > $max_conns ) {
-            printf "%-15s connected to TCP port %5d %9d times\n", $ip, $port,
-              $conn{$ip}{$port};
-        }
-    }
-}
+# Thanks to http://www.perlmonks.org/?node_id=1063511
+printf "%-15s connected to TCP port %5d %9d times\n", @$_
+  for sort { $b->[2] <=> $a->[2] }
+  grep     { $_->[2] > $max_conns }
+  map {
+    my $ip = $_;
+    map { [ $ip, $_, $conn{$ip}{$_} ] } keys %{ $conn{$ip} }
+  }
+  keys %conn;
