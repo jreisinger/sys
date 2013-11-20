@@ -53,9 +53,11 @@ while (<>) {
         $lines_n{matched}++;
 
         # Get the log timespan
-        my $month = $mon2num{ lc $+{MON} };
-        my $epoch =
-          timelocal( $+{SEC}, $+{MIN}, $+{HOURS}, $+{MDAY}, $+{MON}, $+{YEAR} );
+        my $epoch = timelocal(
+            $+{SEC}, $+{MIN}, $+{HOURS}, $+{MDAY},
+            $mon2num{ lc $+{MON} } - 1,
+            $+{YEAR} - 1900
+        );
         $earliest = $epoch if $epoch < $earliest;
         $latest   = $epoch if $epoch > $latest;
 
