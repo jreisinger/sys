@@ -1,6 +1,6 @@
 #!/usr/bin/perl
-# Parses conntrackd logs for suspuciously high number of connections.
-# Usage: zcat logs/conntrackd-stats.log.1.gz | head -10000 | ./conn-parse
+# Parse conntrackd logs for suspuciously high number of connections.
+# Usage: zcat logs/conntrackd-stats.log.1.gz | head -10000 | ./conn-parse -
 use strict;
 use warnings;
 use Socket;
@@ -10,7 +10,7 @@ die "Usage: $0 /var/log/conntrackd-stats.log" unless defined $ARGV[0];
 
 my $max_ports      = 999;      # number of ports an IP has connected to
 my $max_conns      = 10000;    # number of connections to a port
-my $max_smtp_conns = 1200;     # number of connections to port 25
+my $max_smtp_conns = 100;      # number of connections to port 25
 my %conn;
 my $earliest = time;
 my $latest   = 0;
@@ -21,14 +21,15 @@ my %mon2num = qw(
   jul 7  aug 8  sep 9  oct 10 nov 11 dec 12
 );
 
+###################################
+# Parse log file and collect data #
+###################################
+
 while (<>) {
-
     $lines_n{total}++;
-
     chomp;
 
     if (
-
         m/
         ^\w{3}\s(?<MON>\w{3})\s(?<MDAY>\d{2})                           # Mon Nov 18
         \s
@@ -46,7 +47,6 @@ while (<>) {
         \s
         dport=(?<DPORT>\d{1,5})                                         # dport=443
         /x
-
       )
     {
         $lines_n{matched}++;
@@ -60,14 +60,14 @@ while (<>) {
         $earliest = $epoch if $epoch < $earliest;
         $latest   = $epoch if $epoch > $latest;
 
+        # Count how many times an IP address connects to port(s)
         $conn{ $+{SRC} }{ $+{DPORT} }++;
     }
-
 }
 
-###################
-# Report printing #
-###################
+#################
+# Print report  #
+#################
 
 # Print general header
 my $seconds = $latest - $earliest;
@@ -91,7 +91,7 @@ for my $ip (
     }
 }
 
-# Thanks to http://www.perlmonks.org/?node_id=1063511
+# Thanks to PerlMonks - http://www.perlmonks.org/?node_id=1063511
 print "### Connecting too many times to a single port ###\n";
 printf "%-15s connected to TCP port %5d %9d times (%d times per minute)\n", @$_
   for sort { $b->[2] <=> $a->[2] }
