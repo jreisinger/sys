@@ -31,7 +31,7 @@ while (<>) {
 
     if (
         m/
-        ^\w{3}\s(?<MON>\w{3})\s(?<MDAY>\d{2})                           # Mon Nov 18
+        ^\w{3}\s(?<MON>\w{3})\s+(?<MDAY>\d{1,2})                           # Mon Nov 18
         \s
         (?<HOURS>\d\d):(?<MIN>\d\d):(?<SEC>\d\d)\s(?<YEAR>\d{4})        # 06:25:02 2013
         \s+
