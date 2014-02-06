@@ -86,14 +86,14 @@ for my $ip (
 {
     my $ports_connected = keys $conn{$ip};
     if ( $ports_connected > $max_ports ) {
-        printf "%-15s connected to %5d different ports\n", $ip,
+        printf "%-15s to %5d different ports\n", $ip,
           $ports_connected;
     }
 }
 
 # Thanks to PerlMonks - http://www.perlmonks.org/?node_id=1063511
 print "### Connecting too many times to a single port ###\n";
-printf "%-15s connected to TCP port %5d %9d times (%d times per minute)\n", @$_
+printf "%-15s to %5d/TCP %9d times (%d times/min)\n", @$_
   for sort { $b->[2] <=> $a->[2] }
   grep     { $_->[2] > $max_conns }
   map {
@@ -103,8 +103,8 @@ printf "%-15s connected to TCP port %5d %9d times (%d times per minute)\n", @$_
   }
   keys %conn;
 
-print "### Possible spam sending ###\n";
-printf "%-15s connected to TCP port %5d %9d times (%d times per minute)\n", @$_
+print "### Connecting too many times to 25/TCP (spam sending?) ###\n";
+printf "%-15s to %5d/TCP %9d times (%d times/min)\n", @$_
   for sort { $b->[2] <=> $a->[2] }
   grep { $_->[1] == 25 and $_->[2] > $max_smtp_conns }
   map {
