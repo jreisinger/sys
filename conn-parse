@@ -78,7 +78,7 @@ print 'Logs timespan: '
   . " ($days days)\n";
 print "Matched $lines_n{matched} out of $lines_n{total} lines\n";
 
-print "### Connecting to too many different ports ###\n";
+print "### Connecting to too many different ports (port scanning?) ###\n";
 for my $ip (
     sort { scalar( keys %{ $conn{$b} } ) <=> scalar( keys %{ $conn{$a} } ) }
     keys %conn
