@@ -1,5 +1,5 @@
 #!/bin/bash
-# Get current swap usage for all running processes.
+# Get current swap usage in KB for all running processes.
 # Processes using most swap: # ./getswap.sh | sort -n -k 5
 # Erik Ljungstrom 27/05/2011
 # http://northernmost.org/blog/find-out-what-is-using-your-swap/
