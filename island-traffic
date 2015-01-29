@@ -8,6 +8,7 @@ use Pod::Usage;
 use File::Basename;
 use Storable;
 use File::Copy;
+use JSON;
 
 #################
 # Configuration #
@@ -16,13 +17,15 @@ use File::Copy;
 # Command line options
 my $help      = 0;
 my $man       = 0;
-my $data_file = '.total_bytes.data';
+my $data_file = '.total_bytes';
 my $print;
+my $json;
 GetOptions(
     "help|h|?" => \$help,
     man        => \$man,
     "file=s"   => \$data_file,
     print      => \$print,
+    json       => \$json,
 ) or pod2usage(2);
 
 # Help
@@ -30,6 +33,10 @@ pod2usage(1) if $help;
 pod2usage( -exitval => 0, -verbose => 2, -noperldoc => 1 ) if $man;
 
 my $all = '**TOTAL SENT**';
+$data_file .= do {
+    if   ($json) { '.json' }
+    else         { '.data' }
+};
 
 ########
 # Main #
@@ -42,12 +49,22 @@ if ( -e $data_file ) {
     copy( $data_file, $data_file . '.' . ts() )
       or die "Couldn't create backup of $data_file";    # backup
 
-    my $data = retrieve $data_file;
-    die "could not retrieve data from $data_file" unless $data;
-    %total_bytes = %$data;
+    if ($json) {
+        local $/;
+        open( my $fh, '<:raw', $data_file );
+        my $json_text = <$fh>;
+        my $data      = decode_json($json_text);
+        %total_bytes = %$data;
+    } else {                                            # Storable
+        my $data = retrieve $data_file;
+        die "could not retrieve data from $data_file" unless $data;
+        %total_bytes = %$data;
+    }
 }
 
 unless ($print) {
+
+    # Collect data
     while (<>) {
         next if /\A\s*#/;                               # skip comments
         my ( $src, $dst, $bytes ) = split;
@@ -56,14 +73,21 @@ unless ($print) {
     }
 
     # Store collected data
-    store \%total_bytes, $data_file;
+    if ($json) {
+        open( my $fh, '>:utf8', $data_file );
+        my $json_text = \%total_bytes;
+        print $fh to_json( $json_text, { pretty => 1 } );
+    } else {                                            # Storable
+        store \%total_bytes, $data_file;
+    }
 }
 
+# Print report
 my @sources =
   sort { $total_bytes{$b}{$all} <=> $total_bytes{$a}{$all} } keys %total_bytes;
 
 for my $src (@sources) {
-    my $tb = $total_bytes{$src};    # more readable?
+    my $tb = $total_bytes{$src};                        # more readable?
 
     print "$src (", scaleIt( $tb->{$all} ), ")\n";
 
@@ -111,10 +135,15 @@ island-traffic [options] [<log_file>]
   Options:
     --help          brief help message
     --man           full documentation
-    --file <file>   store running totals in <file> (default: .total_bytes.data)
+    --json          store running totals in JSON format (default: Storable)
+    --file <name>   store running totals in <name>.<format> (default: .total_bytes.data)
     --print         print report from current data (no new data input)
 
 =head1 DESCRIPTION
+
+(This script is based on exercises from I<Intermediate Perl> book. Parses and
+reports statistics from data like those from "Chapter 5: References and
+Scoping" on L<http://www.intermediateperl.com/downloads_page>.)
 
 Read input data from a <log_file> or STDIN. Data is expected to be formatted
 like:
@@ -124,10 +153,6 @@ like:
 Running totals are stored in a data file. Old data files are saved with the
 current timestamp (like F<.total_bytes.data.20150129_203402>) so it's possible
 to revert the latest additions.
-
-Based on exercises from I<Intermediate Perl> book. Parses and reports statistics
-from data like those from "Chapter 5: References and Scoping" on
-L<http://www.intermediateperl.com/downloads_page>.
 
 =head1 EXAMPLES
 
