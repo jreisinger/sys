@@ -1,4 +1,4 @@
-Linux
-=====
+sys
+===
 
-Scripts and documentation (see wiki) for Linux/Unix system administration.
+Scripts for (mostly Linux/Unix) system administration.
