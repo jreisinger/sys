@@ -1,0 +1,138 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use 5.010;
+use autodie;
+use Getopt::Long;
+use Pod::Usage;
+use File::Basename;
+use Storable;
+use File::Copy;
+
+#################
+# Configuration #
+#################
+
+# Command line options
+my $help      = 0;
+my $man       = 0;
+my $data_file = '.total_bytes.data';
+my $print;
+GetOptions(
+    "help|h|?" => \$help,
+    man        => \$man,
+    "file=s"   => \$data_file,
+    print      => \$print,
+) or pod2usage(2);
+
+# Help
+pod2usage(1) if $help;
+pod2usage( -exitval => 0, -verbose => 2, -noperldoc => 1 ) if $man;
+
+my $all = '**TOTAL SENT**';
+
+########
+# Main #
+########
+
+my %total_bytes;
+
+# Get previously collected data if any
+if ( -e $data_file ) {
+    copy( $data_file, $data_file . '.' . ts() )
+      or die "Couldn't create backup of $data_file";    # backup
+
+    my $data = retrieve $data_file;
+    die "could not retrieve data from $data_file" unless $data;
+    %total_bytes = %$data;
+}
+
+unless ($print) {
+    while (<>) {
+        next if /\A\s*#/;                               # skip comments
+        my ( $src, $dst, $bytes ) = split;
+        $total_bytes{$src}{$dst} += $bytes;
+        $total_bytes{$src}{$all} += $bytes;
+    }
+
+    # Store collected data
+    store \%total_bytes, $data_file;
+}
+
+my @sources =
+  sort { $total_bytes{$b}{$all} <=> $total_bytes{$a}{$all} } keys %total_bytes;
+
+for my $src (@sources) {
+    my $tb = $total_bytes{$src};    # more readable?
+
+    print "$src (", scaleIt( $tb->{$all} ), ")\n";
+
+    for my $dst ( sort { $tb->{$b} <=> $tb->{$a} } keys %{$tb} ) {
+        next if $dst eq $all;
+        print "    $dst (", scaleIt( $tb->{$dst} ), ")\n";
+    }
+}
+
+#############
+# Functions #
+#############
+
+# Return current timestamp
+sub ts {
+    my ( $sec, $min, $hour, $mday, $mon, $year ) = (localtime)[ 0 .. 5 ];
+    $year += 1900;
+    $mon  += 1;
+
+    sprintf "%4d%02d%02d_%02d%02d%02d", $year, $mon, $mday, $hour, $min, $sec;
+}
+
+# Make sizes human readable
+sub scaleIt {
+    my $size_in_bytes = shift;
+
+    return unless defined $size_in_bytes;
+
+    my ( $size, $n ) = ( $size_in_bytes, 0 );
+    ++$n and $size /= 1024 until $size < 1024;
+
+    sprintf "%.0f%s", $size, (qw[ B KB MB GB TB ])[$n];
+}
+
+__END__
+
+=head1 NAME
+
+island-traffic - generate report from network traffic log
+
+=head1 SYNOPSIS
+
+island-traffic [options] [<log_file>]
+
+  Options:
+    --help          brief help message
+    --man           full documentation
+    --file <file>   store running totals in <file> (default: .total_bytes.data)
+    --print         print report from current data (no new data input)
+
+=head1 DESCRIPTION
+
+Read input data from a <log_file> or STDIN. Data is expected to be formatted
+like:
+
+    source_hostname destination_hostname bytes_transferred
+
+Running totals are stored in a data file. Old data files are saved with the
+current timestamp (like F<.total_bytes.data.20150129_203402>) so it's possible
+to revert the latest additions.
+
+Based on exercises from I<Intermediate Perl> book. Parses and reports statistics
+from data like those from "Chapter 5: References and Scoping" on
+L<http://www.intermediateperl.com/downloads_page>.
+
+=head1 EXAMPLES
+
+Print out a short help message and exit:
+
+    island-traffic -h
+
+=cut
