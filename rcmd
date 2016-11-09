@@ -1,0 +1,29 @@
+#!/usr/bin/perl
+# Execute command on hosts.txt over SSH.
+use strict;
+use warnings;
+use Net::OpenSSH;
+
+@ARGV == 2 or die "usage: $0 'command' hosts.txt\n";
+my ( $cmd, $hosts ) = @ARGV;
+
+my $contents = do { local ( @ARGV, $/ ) = $hosts; <> };
+my @hosts = split ' ', $contents;
+
+my %ssh;
+
+# multiple connections are established in parallel:
+for my $host (@hosts) {
+    $ssh{$host} = Net::OpenSSH->new(
+        $host,
+        user    => 'jreisinger',
+        async   => 1,
+        timeout => 3
+    );
+}
+
+# then to run some command in all the hosts (sequentially):
+for my $host (@hosts) {
+    print "--> running '$cmd' on $host\n";
+    $ssh{$host}->system($cmd);
+}
