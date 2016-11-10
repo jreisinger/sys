@@ -4,8 +4,8 @@ use strict;
 use warnings;
 use Net::OpenSSH;
 
-@ARGV == 2 or die "usage: $0 'command' hosts.txt\n";
-my ( $cmd, $hosts ) = @ARGV;
+@ARGV == 2 or die "usage: $0 hosts.txt 'command'\n";
+my ( $hosts, $cmd ) = @ARGV;
 
 my $contents = do { local ( @ARGV, $/ ) = $hosts; <> };
 my @hosts = split ' ', $contents;
@@ -16,9 +16,10 @@ my %ssh;
 for my $host (@hosts) {
     $ssh{$host} = Net::OpenSSH->new(
         $host,
-        user    => 'jreisinger',
+        user    => 'root',
         async   => 1,
-        timeout => 3
+        timeout => 3,
+        master_stderr_discard => 1,  # don't show the MOTD
     );
 }
 
