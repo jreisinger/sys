@@ -7,8 +7,8 @@ use Net::OpenSSH;
 our ($h, $v);
 
 my $usage = <<"EOF";
+Usage: $0 [-hv] hosts.txt 'command'
 Execute command on hosts.txt over SSH.
-usage: $0 [-hv] hosts.txt 'command'
   -h    print usage help
   -v    be more verbose
 EOF
