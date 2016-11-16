@@ -4,29 +4,52 @@ use warnings;
 use lib "$ENV{HOME}/perl5/lib";
 use Net::OpenSSH;
 
-our ($h, $v);
+# command line options
+our ($h, $v, $l);
 
+# usage help message
 my $usage = <<"EOF";
-Usage: $0 [-hv] hosts.txt 'command'
-Execute command on hosts.txt over SSH.
-  -h    print usage help
-  -v    be more verbose
+Execute a command on remote hosts over SSH. HOSTS is a file containing remote
+hosts one per line. 'command' is either supplied by you (ex. 'df -h | grep
+/home') or it's one of the built-in commands.
+
+$0 [-v] HOSTS 'command'
+$0 -l
+$0 -h
+  -h        print usage help
+  -v        be more verbose
+  -l        list built-in commands and exit
 EOF
 
+# print help and exit
 if ($h) {
     print $usage;
     exit;
 }
 
+# put built-in commands into a hash
+my %Builtins;
+while (<DATA>) {
+    my ($name, $cmd) = split ' ', $_, 2;
+    $Builtins{$name} = $cmd;
+}
+
+# list built-in commands and exit
+if ($l) {
+    for my $name (sort keys %Builtins) {
+        print "$name => $Builtins{$name}";
+    }
+    exit;
+}
+
+# check and get command line arguments
 @ARGV == 2 or die $usage;
 my ( $hosts, $cmd ) = @ARGV;
-
 my $contents = do { local ( @ARGV, $/ ) = $hosts; <> };
 my @hosts = split ' ', $contents;
 
+# multiple connections are established (in parallel)
 my %ssh;
-
-# multiple connections are established in parallel:
 for my $host (@hosts) {
     $ssh{$host} = Net::OpenSSH->new(
         $host,
@@ -37,10 +60,18 @@ for my $host (@hosts) {
     );
 }
 
-# then to run some command in all the hosts (sequentially):
+# run a command on all the hosts (sequentially) ...
 for my $host (@hosts) {
+
+    # if the supplied command is a name of a built-in command run that one
+    $cmd = $Builtins{$cmd} if exists $Builtins{$cmd};
+
     my $msg = "---> $host";
     $msg .= ": $cmd" if $v;
     print "$msg\n";
     $ssh{$host}->system($cmd);
 }
+
+__DATA__
+boot_time           last | grep boot | head -1 | perl -lane 'print join " ", @F[4..7]'
+big_palindromes     perl -lne 'print if $_ eq reverse and length >= 5' /usr/share/dict/words
