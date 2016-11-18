@@ -8,22 +8,23 @@ use Net::OpenSSH;
 our ($h, $v, $l);
 
 # usage help message
-my $usage = <<"EOF";
+my $desc = <<"EOF";
 Execute a command on remote hosts over SSH. HOSTS is a file containing remote
 hosts one per line. 'command' is either supplied by you (ex. 'df -h | grep
 /home') or it's one of the built-in commands.
-
+EOF
+my $usage = <<"EOF";
 $0 [-v] HOSTS 'command'
 $0 -l
 $0 -h
-  -h        print usage help
   -v        be more verbose
   -l        list built-in commands and exit
+  -h        print usage help
 EOF
 
 # print help and exit
 if ($h) {
-    print $usage;
+    print "$desc\n$usage";
     exit;
 }
 
