@@ -5,7 +5,7 @@ use lib "$ENV{HOME}/perl5/lib";
 use Net::OpenSSH;
 
 # command line options
-our ($h, $v, $l);
+our ($h, $v, $l, $u);
 
 # usage help message
 my $desc = <<"EOF";
@@ -14,9 +14,10 @@ hosts one per line. 'command' is either supplied by you (ex. 'df -h | grep
 /home') or it's one of the built-in commands.
 EOF
 my $usage = <<"EOF";
-$0 [-v] HOSTS 'command'
+$0 [-u=USER -v] hosts.txt 'command'
 $0 -l
 $0 -h
+  -u=USER   SSH username; default is the current username
   -v        be more verbose
   -l        list built-in commands and exit
   -h        print usage help
@@ -49,12 +50,19 @@ my ( $hosts, $cmd ) = @ARGV;
 my $contents = do { local ( @ARGV, $/ ) = $hosts; <> };
 my @hosts = split ' ', $contents;
 
+my $user;
+if ($u) {
+    $user = $u;
+} else {
+    $user = getlogin || getpwuid($<) || die "Can't get current username";
+}
+
 # multiple connections are established (in parallel)
 my %ssh;
 for my $host (@hosts) {
     $ssh{$host} = Net::OpenSSH->new(
         $host,
-        user    => 'root',
+        user    => $user,
         async   => 1,
         timeout => 3,
         master_stderr_discard => 1,  # don't show the MOTD
