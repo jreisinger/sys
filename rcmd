@@ -1,11 +1,12 @@
 #!/usr/bin/perl -s
+# source: https://github.com/jreisinger/sys/blob/master/rcmd
 use strict;
 use warnings;
 use lib "$ENV{HOME}/perl5/lib";
 use Net::OpenSSH;
 
 # command line options
-our ($h, $v, $l, $u);
+our ($h, $v, $l, $u, $k);
 
 # usage help message
 my $desc = <<"EOF";
@@ -14,10 +15,11 @@ hosts one per line. 'command' is either supplied by you (ex. 'df -h | grep
 /home') or it's one of the built-in commands.
 EOF
 my $usage = <<"EOF";
-$0 [-u=USER -v] hosts.txt 'command'
+$0 [-u=USER -k=KEY -v] hosts.txt 'command'
 $0 -l
 $0 -h
   -u=USER   SSH username; default is the current username
+  -k=KEY    SSH private key; ex. /home/foo/.ssh/id_rsa
   -v        be more verbose
   -l        list built-in commands and exit
   -h        print usage help
@@ -28,6 +30,8 @@ if ($h) {
     print "$desc\n$usage";
     exit;
 }
+
+my $private_key_path = $k || "";
 
 # put built-in commands into a hash
 my %Builtins;
@@ -63,6 +67,7 @@ for my $host (@hosts) {
     $ssh{$host} = Net::OpenSSH->new(
         $host,
         user    => $user,
+        key_path => $private_key_path,
         async   => 1,
         timeout => 3,
         master_stderr_discard => 1,  # don't show the MOTD
