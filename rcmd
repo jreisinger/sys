@@ -89,3 +89,4 @@ for my $host (@hosts) {
 __DATA__
 boot_time           last | grep boot | head -1 | perl -lane 'print join " ", @F[4..7]'
 big_palindromes     perl -lne 'print if $_ eq reverse and length >= 5' /usr/share/dict/words
+free_mem            free -m | grep -E '^Mem:' | perl -lane '($total,$free,$buffers,$cached) = ( /(\d+)/g )[0,2,4,5]; printf("%.0f%%\n", ($free+$buffers+$cached)/$total*100)'
