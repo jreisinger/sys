@@ -42,13 +42,21 @@ while (<DATA>) {
 
 # list built-in commands and exit
 if ($l) {
-    my $longest_name = 0;
-    for my $name (keys %Builtins) {
-        $longest_name = length($name) if length($name) > $longest_name;
+    if ($v) {
+        my $longest_name = 0;
+        for my $name (keys %Builtins) {
+            $longest_name = length($name) if length($name) > $longest_name;
+        }
+
+        for my $name (sort keys %Builtins) {
+            printf "%-${longest_name}s => %s", $name, $Builtins{$name};
+        }
+    } else { # print only the names
+        for my $name (sort keys %Builtins) {
+            print "$name\n";
+        }
     }
-    for my $name (sort keys %Builtins) {
-        printf "%-${longest_name}s => %s", $name, $Builtins{$name};
-    }
+
     exit;
 }
 
@@ -58,6 +66,7 @@ my ( $hosts, $cmd ) = @ARGV;
 my $contents = do { local ( @ARGV, $/ ) = $hosts; <> };
 my @hosts = split ' ', $contents;
 
+# username to use for ssh connections
 my $user;
 if ($u) {
     $user = $u;
