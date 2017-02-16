@@ -17,7 +17,7 @@ remote hosts one per line. 'command' is either supplied by you
 EOF
 my $usage = <<"EOF";
 $0 [-u=USER -k=KEY -v] hosts.txt 'command'
-$0 -l
+$0 -l [-v]
 $0 -h
   -u=USER   SSH username; default is the current username
   -k=KEY    SSH private key; ex. /home/foo/.ssh/id_rsa
