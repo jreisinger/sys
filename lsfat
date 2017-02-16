@@ -79,7 +79,7 @@ sub get_fat_fs {
 
     my %usage;
 
-    for (`df`) {
+    for (`df -P`) {
         chomp;
         next unless /^\s*\//;
         my ( $fs, $percentage ) = (split)[ 5, 4 ];
@@ -118,4 +118,3 @@ Find top 3 biggest files on root filesystem:
     lsfat --fs / --top 3
 
 =cut
-
