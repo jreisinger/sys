@@ -9,7 +9,7 @@ use Term::ANSIColor qw(:constants);
 # command line options
 our ($h, $v, $l, $u, $k);
 
-# usage help message
+# help message
 my $desc = <<"EOF";
 Execute a command on remote hosts over SSH. hosts.txt is a file containing
 remote hosts one per line. 'command' is either supplied by you
@@ -23,7 +23,7 @@ $0 -h
   -k=KEY    SSH private key; ex. /home/foo/.ssh/id_rsa
   -v        be more verbose
   -l        list built-in commands and exit
-  -h        print usage help
+  -h        print help and exit
 EOF
 
 # print help and exit
