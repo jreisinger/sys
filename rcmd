@@ -43,17 +43,10 @@ while (<DATA>) {
 
 # list built-in commands and exit
 if ($l) {
-    if ($v) {
-        my $longest_name = 0;
-        for my $name (keys %Builtins) {
-            $longest_name = length($name) if length($name) > $longest_name;
-        }
-
-        for my $name (sort keys %Builtins) {
-            printf "%-${longest_name}s => %s", $name, $Builtins{$name};
-        }
-    } else { # print only the names
-        for my $name (sort keys %Builtins) {
+    for my $name (sort keys %Builtins) {
+        if ($v) { # verbose
+            print GREEN, "$name", RESET, " --> $Builtins{$name}";
+        } else {  # just names
             print "$name\n";
         }
     }
