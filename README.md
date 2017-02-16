@@ -11,10 +11,10 @@ Scripts for (mostly Linux/Unix) system administration:
 * iptables.sh - simple iptables firewall script
 * island-traffic - generate report from network traffic log
 * ldap-user.pl - create LDIF file for Unix user
-* *lsfat* - list biggest file systems or files
+* **lsfat** - list biggest file systems or files
 * monitor - monitor some server stuff and send mail if something looks not ok
 * parse_ansible - parse output of ansible command
 * pop-history.pl - read the history of shell commands and determine which ones you use the most
-* *rcmd* - execute a command on remote hosts over SSH
+* **rcmd** - execute a user-defined or built-in command on remote hosts over SSH
 * rhich - search through your PATH for program matching a pattern
 * tripwire - monitor a directory to find any file changes
