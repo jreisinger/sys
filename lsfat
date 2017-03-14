@@ -18,22 +18,41 @@ GetOptions(
 
 pod2usage( -exitval => 0, -verbose => 2, -noperldoc => 1 ) if $help;
 
-die "You're not root, exiting ...\n" unless $< == 0;
+#die "You're not root, exiting ...\n" unless $< == 0;
 
 if ($fs) {
     my $files = get_fat_files( $fs, $top );
 
+    # Find the longest filename
+    my @filenames = map { $_->{name} } @$files;
+    my $max_len = max_len(\@filenames);
+
     print "### The fattest files:\n";
     for my $file (@$files) {
-        print "$file->{name}: ", scaleIt( $file->{size} ), "\n";
+        printf "%-${max_len}s %s\n", $file->{name}, scaleIt($file->{size});
     }
 } else {
     my @fs = get_fat_fs($top);
 
+    # Find the longest filesystem name
+    my @fs_names = map { $_->[0] } @fs;
+    my $max_len = max_len(\@fs_names);
+
     print "### The fattest file systems:\n";
     for my $fs (@fs) {
-        print "$fs->[0]: $fs->[1]%\n";
+        printf "%-${max_len}s %d%%\n", $fs->[0], $fs->[1];
     }
+}
+
+# Return the size of the longest string from a list of strings
+sub max_len {
+    my $aref = shift;
+    my $max_len = 0;
+    for my $string (@$aref) {
+        my $len = length($string);
+        $max_len = $len if $len > $max_len;
+    }
+    return $max_len;
 }
 
 sub scaleIt {
@@ -71,7 +90,7 @@ sub get_fat_files {
         push @top_files, $file;
     }
 
-    return \@top_files;
+    return \@top_files; # AoH
 }
 
 sub get_fat_fs {
