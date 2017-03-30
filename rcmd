@@ -2,7 +2,7 @@
 # source: https://github.com/jreisinger/sys/blob/master/rcmd
 use strict;
 use warnings;
-use lib "$ENV{HOME}/perl5/lib";
+#use lib "$ENV{HOME}/perl5/lib";
 use Net::OpenSSH;
 use Term::ANSIColor qw(:constants);
 
@@ -11,12 +11,13 @@ our ($h, $v, $l, $u, $k);
 
 # help message
 my $desc = <<"EOF";
-Execute a command on remote hosts over SSH. hosts.txt is a file containing
-remote hosts one per line. 'command' is either supplied by you
-(ex. 'df -h | grep /home') or it's one of the built-in commands.
+Execute a command on remote hosts over SSH. FILE is a file containing hostnames
+of IP addresses of remote hosts. Use - instead of FILE to get hosts from the
+STDIN. COMMAND is either supplied by you (ex. 'df -h | grep /home') or it's one
+of the built-in commands.
 EOF
 my $usage = <<"EOF";
-$0 [-u=USER -k=KEY -v] hosts.txt 'command'
+$0 [-u=USER -k=KEY -v] FILE 'COMMAND'
 $0 -l [-v]
 $0 -h
   -u=USER   SSH username; default is the current username
