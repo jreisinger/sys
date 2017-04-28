@@ -13,7 +13,7 @@ Scripts for (mostly Linux/Unix) system administration:
 * ldap-user.pl - create LDIF file for Unix user
 * **lsfat** - list biggest file systems or files
 * monitor - monitor some server stuff and send mail if something looks not ok
-* monitor.py - basic monitoring of remote hosts
+* **monitor.py** - basic monitoring of remote hosts
 * parse_ansible - parse output of ansible command
 * pop-history.pl - read the history of shell commands and determine which ones you use the most
 * **rcmd** - execute a user-defined or a built-in command on remote hosts over SSH
