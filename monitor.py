@@ -64,7 +64,12 @@ def run_checks(hosts):
     fails = []
 
     for host in hosts:
-        s.connect(host, parse_args().port, parse_args().user, key_filename=parse_args().key)
+        try:
+            s.connect(host, parse_args().port, parse_args().user, key_filename=parse_args().key)
+        except Exception as e:
+            fails.append( { 'host': host, 'check': 'n/a', 'status': 'ERROR', 'msg': str(e) } )
+            continue # like Perl's next()
+
         for name, cmd in checks().iteritems():
 
             # skip some checks defined on the commandline?
