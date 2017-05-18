@@ -67,7 +67,7 @@ def run_checks(hosts):
         try:
             s.connect(host, parse_args().port, parse_args().user, key_filename=parse_args().key)
         except Exception as e:
-            fails.append( { 'host': host, 'check': 'n/a', 'status': 'ERROR', 'msg': str(e) } )
+            fails.append( { 'host': host, 'check': 'SSH', 'status': 'ERROR', 'msg': str(e) } )
             continue # like Perl's next()
 
         for name, cmd in checks().iteritems():
