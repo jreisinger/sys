@@ -31,13 +31,17 @@ $IPT -A INPUT -s 127.0.0.1 -i lo -j ACCEPT
 $IPT -A OUTPUT -p udp --dport 53 -j ACCEPT
 $IPT -A INPUT -p udp --sport 53 -j ACCEPT
 
-# Let clients' TCP traffic pass
+# Allow NTP
+$IPT -A OUTPUT -p udp --dport 123 -j ACCEPT
+$IPT -A INPUT -p udp --sport 123 -j ACCEPT
+
+# Let clients' TCP traffic pass - consider removing this for servers
 $IPT -A OUTPUT -p tcp --sport 1024:65535 -m state \
             --state NEW,ESTABLISHED,RELATED -j ACCEPT
 $IPT -A INPUT -p tcp --dport 1024:65535 -m state \
             --state ESTABLISHED,RELATED -j ACCEPT
 
-# Let SSH traffic pass
+# Let SSH traffic pass - you need both these rules!
 $IPT -A OUTPUT -p tcp --sport 22 -m state \
             --state ESTABLISHED,RELATED -j ACCEPT
 $IPT -A INPUT -p tcp --dport 22 -m state \
