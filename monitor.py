@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# See also https://github.com/jreisinger/monitor2
 import paramiko
 import argparse
 from pprint import pprint # like Data::Dumper
