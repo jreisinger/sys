@@ -4,6 +4,7 @@ sys
 Scripts for (mostly Linux/Unix) system administration:
 
 * conn-parse - parse conntrackd logs for suspuciously high number of connections
+* dupps - prints PIDs of processes that have the same basename
 * duplicates.pl - find files that might be duplicates
 * freed-bytes - how many bytes would we free by removing $FILE_NAMES older than $OLDER_THAN
 * geo-locate-ip.pl - parse fail2ban logs and geolocate IP addresses of attackers
