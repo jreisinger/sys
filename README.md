@@ -20,3 +20,4 @@ Scripts for (mostly Linux/Unix) system administration:
 * **rcmd** - execute a user-defined or a built-in command on remote hosts over SSH
 * rhich - search through your PATH for program matching a pattern
 * tripwire - monitor a directory to find any file changes
+* test-os.py - test OpenStack components are working
