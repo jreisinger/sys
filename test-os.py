@@ -4,7 +4,7 @@
 
 import os, sys
 
-if not os.environ['OS_PASSWORD']:
+if not os.environ.get('OS_PASSWORD'):
     sys.exit("I don't see OS_PASSWORD envvar, exiting ...")
 
 command = {
