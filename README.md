@@ -21,3 +21,4 @@ Scripts for (mostly Linux/Unix) system administration:
 * rhich - search through your PATH for program matching a pattern
 * tripwire - monitor a directory to find any file changes
 * test-os.py - test OpenStack components are working
+* test-os.go - test OpenStack components are working (in parallel!)
