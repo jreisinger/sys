@@ -23,6 +23,7 @@ func main() { // main runs in a goroutine
 		"openstack network list",
 		"openstack volume list",
 		"openstack image list",
+		//"openstack stack list",
 	}
 
 	for _, cmd := range cmds {
@@ -38,9 +39,9 @@ func run(command string, ch chan<- string) {
 	parts := strings.Split(command, " ")
 	cmd := exec.Command(parts[0], parts[1:]...)
 	stdoutStderr, err := cmd.CombinedOutput()
+	ch <- fmt.Sprintf("--> CMD: %s\n%s", command, stdoutStderr)
 	if err != nil {
-		ch <- fmt.Sprint(err) // send to channel ch
+		ch <- fmt.Sprintf("%s\n", err) // send to channel ch
 		return
 	}
-	ch <- fmt.Sprintf("--> CMD: %s\n%s", command, stdoutStderr)
 }
