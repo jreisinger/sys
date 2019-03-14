@@ -31,7 +31,8 @@ func main() { // main runs in a goroutine
 	}
 
 	for range cmds {
-		fmt.Print(<-ch) // receive from channel ch
+		// receive from channel ch
+		fmt.Print(<-ch)
 	}
 }
 
@@ -39,9 +40,11 @@ func run(command string, ch chan<- string) {
 	parts := strings.Split(command, " ")
 	cmd := exec.Command(parts[0], parts[1:]...)
 	stdoutStderr, err := cmd.CombinedOutput()
-	ch <- fmt.Sprintf("--> CMD: %s\n%s", command, stdoutStderr)
 	if err != nil {
-		ch <- fmt.Sprintf("%s\n", err) // send to channel ch
+		// send to channel
+		ch <- fmt.Sprintf("--> CMD: %s\n%s%s\n", command, stdoutStderr, err)
 		return
 	}
+	// send to channel
+	ch <- fmt.Sprintf("--> CMD: %s\n%s", command, stdoutStderr)
 }
