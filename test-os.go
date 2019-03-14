@@ -19,6 +19,9 @@ func main() { // main runs in a goroutine
 	}
 
 	cmds := []string{
+		"openstack availability zone list",
+		"openstack catalog list",
+		"openstack command list",
 		"openstack server list",
 		"openstack network list",
 		"openstack volume list",
@@ -42,9 +45,10 @@ func run(command string, ch chan<- string) {
 	stdoutStderr, err := cmd.CombinedOutput()
 	if err != nil {
 		// send to channel
-		ch <- fmt.Sprintf("--> CMD: %s\n%s%s\n", command, stdoutStderr, err)
+		ch <- fmt.Sprintf("--> ERR: %s\n%s%s\n", command, stdoutStderr, err)
 		return
 	}
 	// send to channel
-	ch <- fmt.Sprintf("--> CMD: %s\n%s", command, stdoutStderr)
+	//ch <- fmt.Sprintf("--> CMD: %s\n%s", command, stdoutStderr)
+	ch <- fmt.Sprintf("--> OK: %s\n", command)
 }
