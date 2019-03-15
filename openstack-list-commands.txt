@@ -12,7 +12,7 @@ openstack network agent list
 openstack network list
 openstack network service provider list
 openstack port list
-openstack project list
+#openstack project list
 openstack router list
 openstack security group list
 openstack security group rule list
@@ -20,7 +20,7 @@ openstack server group list
 openstack server list
 openstack snapshot list
 openstack subnet list
-openstack volume backend pool list
+#openstack volume backend pool list
 openstack volume list
 openstack volume snapshot list
 openstack volume transfer request list
