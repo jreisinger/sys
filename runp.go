@@ -14,19 +14,20 @@ import (
 )
 
 func main() { // main runs in a goroutine
-	numCmds := flag.Int("n", 0, "number of commands to run")
-	flag.Parse()
-	fmt.Println(*numCmds)
-	os.Exit(0)
+	flag.Usage = usage
 
-	// Usage.
-	if len(os.Args) != 2 {
-		fmt.Fprintf(os.Stderr, "Usage: %s commands.txt\n", os.Args[0])
+	numCmds := flag.Int("n", -1, "number of commands to run")
+	verbose := flag.Bool("v", false, "be verbose")
+
+	flag.Parse()
+
+	if len(flag.Args()) != 1 {
+		usage()
 		os.Exit(1)
 	}
 
 	// Get commands to execute from a file.
-	cmds, err := readCommands(os.Args[1], *numCmds)
+	cmds, err := readCommands(flag.Args()[0], *numCmds)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error reading commands: %s. Exiting ...\n", err)
 		os.Exit(1)
@@ -35,7 +36,7 @@ func main() { // main runs in a goroutine
 	ch := make(chan string)
 
 	for _, cmd := range cmds {
-		go run(cmd, ch)
+		go run(cmd, ch, verbose)
 	}
 
 	for range cmds {
@@ -44,7 +45,12 @@ func main() { // main runs in a goroutine
 	}
 }
 
-// readCommands reads number of commands from a file.
+func usage() {
+	fmt.Fprintf(flag.CommandLine.Output(), "Run commands defined in a file in parallel.\n\n")
+	fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s [options] commands.txt\n", os.Args[0])
+	flag.PrintDefaults()
+}
+
 func readCommands(filePath string, number int) ([]string, error) {
 	// Open the file containing commands.
 	file, err := os.Open(filePath)
@@ -57,7 +63,7 @@ func readCommands(filePath string, number int) ([]string, error) {
 	scanner := bufio.NewScanner(file)
 	counter := 0
 	for scanner.Scan() {
-		if number != 0 && counter >= number {
+		if number >= 0 && counter >= number {
 			break
 		}
 
@@ -75,8 +81,7 @@ func readCommands(filePath string, number int) ([]string, error) {
 	return cmds, scanner.Err()
 }
 
-// run runs a command.
-func run(command string, ch chan<- string) {
+func run(command string, ch chan<- string, verbose *bool) {
 	parts := strings.Split(command, " ")
 	cmd := exec.Command(parts[0], parts[1:]...)
 	stdoutStderr, err := cmd.CombinedOutput()
@@ -86,6 +91,9 @@ func run(command string, ch chan<- string) {
 		return
 	}
 	// send to channel
-	//ch <- fmt.Sprintf("--> CMD: %s\n%s", command, stdoutStderr)
-	ch <- fmt.Sprintf("--> OK: %s\n", command)
+	if *verbose {
+		ch <- fmt.Sprintf("--> OK: %s\n%s\n", command, stdoutStderr)
+	} else {
+		ch <- fmt.Sprintf("--> OK: %s\n", command)
+	}
 }
