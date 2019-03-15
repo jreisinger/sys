@@ -5,6 +5,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -13,6 +14,11 @@ import (
 )
 
 func main() { // main runs in a goroutine
+	numCmds := flag.Int("n", 0, "number of commands to run")
+	flag.Parse()
+	fmt.Println(*numCmds)
+	os.Exit(0)
+
 	// Usage.
 	if len(os.Args) != 2 {
 		fmt.Fprintf(os.Stderr, "Usage: %s commands.txt\n", os.Args[0])
@@ -20,7 +26,7 @@ func main() { // main runs in a goroutine
 	}
 
 	// Get commands to execute from a file.
-	cmds, err := readCommands(os.Args[1])
+	cmds, err := readCommands(os.Args[1], *numCmds)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error reading commands: %s. Exiting ...\n", err)
 		os.Exit(1)
@@ -38,8 +44,9 @@ func main() { // main runs in a goroutine
 	}
 }
 
-// Read commands from a file.
-func readCommands(filePath string) ([]string, error) {
+// readCommands reads number of commands from a file.
+func readCommands(filePath string, number int) ([]string, error) {
+	// Open the file containing commands.
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, err
@@ -48,7 +55,12 @@ func readCommands(filePath string) ([]string, error) {
 
 	var cmds []string
 	scanner := bufio.NewScanner(file)
+	counter := 0
 	for scanner.Scan() {
+		if number != 0 && counter >= number {
+			break
+		}
+
 		line := scanner.Text()
 
 		// skip comments
@@ -58,11 +70,12 @@ func readCommands(filePath string) ([]string, error) {
 		}
 
 		cmds = append(cmds, line)
+		counter += 1
 	}
 	return cmds, scanner.Err()
 }
 
-// Run a command.
+// run runs a command.
 func run(command string, ch chan<- string) {
 	parts := strings.Split(command, " ")
 	cmd := exec.Command(parts[0], parts[1:]...)
