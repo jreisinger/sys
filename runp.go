@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 )
 
@@ -48,7 +49,15 @@ func readCommands(filePath string) ([]string, error) {
 	var cmds []string
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		cmds = append(cmds, scanner.Text())
+		line := scanner.Text()
+
+		// skip comments
+		match, _ := regexp.MatchString("^(#|/)", line)
+		if match {
+			continue
+		}
+
+		cmds = append(cmds, line)
 	}
 	return cmds, scanner.Err()
 }
