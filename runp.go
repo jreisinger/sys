@@ -13,6 +13,12 @@ import (
 	"strings"
 )
 
+func usage() {
+	fmt.Fprintf(os.Stderr, "Run shell commands defined in a file in parallel.\n\n")
+	fmt.Fprintf(os.Stderr, "Usage: %s [options] commands.txt\n", os.Args[0])
+	flag.PrintDefaults()
+}
+
 func main() { // main runs in a goroutine
 	flag.Usage = usage
 
@@ -43,12 +49,6 @@ func main() { // main runs in a goroutine
 		// receive from channel ch
 		fmt.Print(<-ch)
 	}
-}
-
-func usage() {
-	fmt.Fprintf(os.Stderr, "Run commands defined in a file in parallel.\n\n")
-	fmt.Fprintf(os.Stderr, "Usage: %s [options] commands.txt\n", os.Args[0])
-	flag.PrintDefaults()
 }
 
 func readCommands(filePath string, number int) ([]string, error) {
@@ -82,6 +82,7 @@ func readCommands(filePath string, number int) ([]string, error) {
 }
 
 func run(command string, ch chan<- string, verbose *bool) {
+	command = os.ExpandEnv(command) // expand ${var} or $var
 	parts := strings.Split(command, " ")
 	cmd := exec.Command(parts[0], parts[1:]...)
 	stdoutStderr, err := cmd.CombinedOutput()
