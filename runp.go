@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -75,23 +76,28 @@ func readCommands(filePath string) ([]string, error) {
 
 func run(command string, ch chan<- string, verbose *bool, noshell *bool) {
 	var cmd *exec.Cmd
+	var cmdToShow string
+
 	if *noshell {
 		parts := strings.Split(command, " ")
 		cmd = exec.Command(parts[0], parts[1:]...)
+		cmdToShow = strings.Join(cmd.Args, " ")
 	} else {
 		command = os.ExpandEnv(command) // expand ${var} or $var
-		cmd = exec.Command("/bin/sh", "-c", command)
+		shellToUse := "/bin/sh"
+		cmd = exec.Command(shellToUse, "-c", command)
+		cmdToShow = shellToUse + " -c " + strconv.Quote(strings.Join(cmd.Args[2:], " "))
 	}
+
 	stdoutStderr, err := cmd.CombinedOutput()
 	if err != nil {
-		// send to channel
-		ch <- fmt.Sprintf("--> ERR: %s\n%s%s\n", command, stdoutStderr, err)
+		ch <- fmt.Sprintf("--> ERR: %s\n%s%s\n", cmdToShow, stdoutStderr, err)
 		return
 	}
-	// send to channel
+
 	if *verbose {
-		ch <- fmt.Sprintf("--> OK: %s\n%s\n", command, stdoutStderr)
+		ch <- fmt.Sprintf("--> OK: %s\n%s\n", cmdToShow, stdoutStderr)
 	} else {
-		ch <- fmt.Sprintf("--> OK: %s\n", command)
+		ch <- fmt.Sprintf("--> OK: %s\n", cmdToShow)
 	}
 }
