@@ -46,8 +46,8 @@ func main() { // main runs in a goroutine
 }
 
 func usage() {
-	fmt.Fprintf(flag.CommandLine.Output(), "Run commands defined in a file in parallel.\n\n")
-	fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s [options] commands.txt\n", os.Args[0])
+	fmt.Fprintf(os.Stderr, "Run commands defined in a file in parallel.\n\n")
+	fmt.Fprintf(os.Stderr, "Usage: %s [options] commands.txt\n", os.Args[0])
 	flag.PrintDefaults()
 }
 
