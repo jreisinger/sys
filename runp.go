@@ -14,8 +14,9 @@ import (
 )
 
 func usage() {
-	fmt.Fprintf(os.Stderr, "Run shell commands defined in a file in parallel.\n\n")
-	fmt.Fprintf(os.Stderr, "Usage: %s [options] commands.txt\n", os.Args[0])
+	desc := `Run commands defined in a file in parallel. Shell is not invoked but
+environment variables are expanded.`
+	fmt.Fprintf(os.Stderr, "%s\n\nUsage: %s [options] commands.txt\n", desc, os.Args[0])
 	flag.PrintDefaults()
 }
 
