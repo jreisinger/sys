@@ -1,6 +1,3 @@
-//
-// Run commands in parallel.
-//
 package main
 
 import (
@@ -14,8 +11,8 @@ import (
 )
 
 func usage() {
-	desc := `Run commands defined in a file in parallel. Shell is not invoked but
-environment variables are expanded.`
+	desc := `Run commands defined in a file in parallel. By default, shell is invoked and
+env. vars are expanded.`
 	fmt.Fprintf(os.Stderr, "%s\n\nUsage: %s [options] commands.txt\n", desc, os.Args[0])
 	flag.PrintDefaults()
 }
@@ -23,8 +20,8 @@ environment variables are expanded.`
 func main() { // main runs in a goroutine
 	flag.Usage = usage
 
-	numCmds := flag.Int("n", -1, "number of commands to run")
 	verbose := flag.Bool("v", false, "be verbose")
+	noshell := flag.Bool("n", false, "don't invoke shell and don't expand env. vars")
 
 	flag.Parse()
 
@@ -34,7 +31,7 @@ func main() { // main runs in a goroutine
 	}
 
 	// Get commands to execute from a file.
-	cmds, err := readCommands(flag.Args()[0], *numCmds)
+	cmds, err := readCommands(flag.Args()[0])
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error reading commands: %s. Exiting ...\n", err)
 		os.Exit(1)
@@ -43,7 +40,7 @@ func main() { // main runs in a goroutine
 	ch := make(chan string)
 
 	for _, cmd := range cmds {
-		go run(cmd, ch, verbose)
+		go run(cmd, ch, verbose, noshell)
 	}
 
 	for range cmds {
@@ -52,7 +49,7 @@ func main() { // main runs in a goroutine
 	}
 }
 
-func readCommands(filePath string, number int) ([]string, error) {
+func readCommands(filePath string) ([]string, error) {
 	// Open the file containing commands.
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -62,12 +59,7 @@ func readCommands(filePath string, number int) ([]string, error) {
 
 	var cmds []string
 	scanner := bufio.NewScanner(file)
-	counter := 0
 	for scanner.Scan() {
-		if number >= 0 && counter >= number {
-			break
-		}
-
 		line := scanner.Text()
 
 		// skip comments
@@ -77,15 +69,19 @@ func readCommands(filePath string, number int) ([]string, error) {
 		}
 
 		cmds = append(cmds, line)
-		counter += 1
 	}
 	return cmds, scanner.Err()
 }
 
-func run(command string, ch chan<- string, verbose *bool) {
-	command = os.ExpandEnv(command) // expand ${var} or $var
-	parts := strings.Split(command, " ")
-	cmd := exec.Command(parts[0], parts[1:]...)
+func run(command string, ch chan<- string, verbose *bool, noshell *bool) {
+	var cmd *exec.Cmd
+	if *noshell {
+		parts := strings.Split(command, " ")
+		cmd = exec.Command(parts[0], parts[1:]...)
+	} else {
+		command = os.ExpandEnv(command) // expand ${var} or $var
+		cmd = exec.Command("/bin/sh", "-c", command)
+	}
 	stdoutStderr, err := cmd.CombinedOutput()
 	if err != nil {
 		// send to channel
