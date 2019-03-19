@@ -18,6 +18,37 @@ env. vars are expanded. Source: https://raw.githubusercontent.com/jreisinger/sys
 	flag.PrintDefaults()
 }
 
+type Commands struct {
+	FilePath string
+	Err      error
+	Cmds     []string
+}
+
+func (c *Commands) LoadFromFile() {
+	file, err := os.Open(c.FilePath)
+	if err != nil {
+		c.Err = err
+		return
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		// skip comments
+		match, _ := regexp.MatchString("^(#|/)", line)
+		if match {
+			continue
+		}
+
+		c.Cmds = append(c.Cmds, line)
+	}
+	c.Err = scanner.Err()
+}
+
+//type Command *exec.cmd
+
 func main() { // main runs in a goroutine
 	flag.Usage = usage
 
@@ -32,46 +63,23 @@ func main() { // main runs in a goroutine
 	}
 
 	// Get commands to execute from a file.
-	cmds, err := readCommands(flag.Args()[0])
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error reading commands: %s. Exiting ...\n", err)
+	cmds := &Commands{FilePath: flag.Args()[0]}
+	cmds.LoadFromFile()
+	if cmds.Err != nil {
+		fmt.Fprintf(os.Stderr, "Error reading commands: %s. Exiting ...\n", cmds.Err)
 		os.Exit(1)
 	}
 
 	ch := make(chan string)
 
-	for _, cmd := range cmds {
+	for _, cmd := range cmds.Cmds {
 		go run(cmd, ch, verbose, noshell)
 	}
 
-	for range cmds {
+	for range cmds.Cmds {
 		// receive from channel ch
 		fmt.Print(<-ch)
 	}
-}
-
-func readCommands(filePath string) ([]string, error) {
-	// Open the file containing commands.
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	var cmds []string
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		// skip comments
-		match, _ := regexp.MatchString("^(#|/)", line)
-		if match {
-			continue
-		}
-
-		cmds = append(cmds, line)
-	}
-	return cmds, scanner.Err()
 }
 
 func run(command string, ch chan<- string, verbose *bool, noshell *bool) {
