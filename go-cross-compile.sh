@@ -9,8 +9,9 @@ if [[ -z "$package" ]]; then
 fi
 package_split=(${package//\// })
 package_name=${package_split[-1]}
+package_name=$(basename --suffix=.go $package_name)
 
-platforms=("linux/amd64" "darwin/amd64")
+platforms=("linux/amd64" "darwin/amd64" "linux/arm")
 
 for platform in "${platforms[@]}"
 do
