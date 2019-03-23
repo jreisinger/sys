@@ -1,9 +1,8 @@
 #!/bin/bash
-# How many bytes would we free by removing $FILE_NAMES older than $OLDER_THAN
+# How many bytes would we free by removing files older than $OLDER_THAN.
 
 # find options
 OLDER_THAN=180          # -mtime
-FILE_NAMES='*.tgz'      # -name
 
 function show_usage {
         echo "Usage: $0 directory"
@@ -20,8 +19,8 @@ else
         show_usage
 fi
 
-for size in `find $DIR -mtime +$OLDER_THAN -name "$FILE_NAMES" | xargs ls -l | perl -ane 'print $F[4] . "\n"'`
-do 
+for size in `find $DIR -type f -mtime +$OLDER_THAN -print0 | xargs -0 ls -l | perl -lane 'print $F[4]'`
+do
         tot=$(($tot + $size))
 done
 
